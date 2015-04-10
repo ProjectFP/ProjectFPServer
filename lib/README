@@ -1,0 +1,64 @@
+lib/
+====
+
+`lib/` and `test/` are sibling directories. The main code of your service goes
+in here; a parallel directory hierarchy in `test/` contains the project's
+unit tests.
+
+Subdirectories
+--------------
+
+This section reinterprets the 
+[Modular Migration Plan](https://crittercism.atlassian.net/wiki/display/DEV/Modular+migration+plan)
+for node.js.
+
+##`interfaces/`
+contains objects which handle wire-level communication with the 
+external world. Interfaces act as adapters between the application-layer
+protocol (HTTP/REST, AMQP, Thrift, etc.) and the service's business logic.
+
+Guidelines for writing a good interface:
+
+* Perform as much validation as practical in the interface layer. Obviously
+incorrect requests, such as those missing required parameters, should terminate
+in the interface.
+* Serialize objects to their on-the-wire representation in the interface. 
+Example: convert objects stored in the database to their on-the-wire
+representation ([DTO](http://en.wikipedia.org/wiki/Data_transfer_object)) here.
+* For services accessible via multiple transports (e.g. HTTP and AMQP), create
+separate directory hierarchies under `interfaces/` 
+* To accommodate breaking changes to an API, create two sets of interface
+objects under `interfaces/` (e.g. `interfaces/v1.0` and `interfaces/v2.0`) and
+try to handle as much of the breakage as possible in the interfaces.
+
+Interfaces should call into handlers, described below.
+
+## `handlers/`
+contains objects which process requests from interfaces. Examples
+of handler code might include:
+
+* Aggregating many interface requests to an in-process aggregator
+* Creating a new domain object, such as a customer, user, or crash
+
+In general, handlers should implement complete "transactions", whatever that
+means for the service. RDBMS transactions should be roughly 1:1 with a handler.
+
+Handlers should orchestrate calls to several services (using a shared library)
+and/or persistence operations (described below). Handlers should not write
+directly to a database, file on disk, or other persistence store.
+
+## `persistence/`
+contains [data access objects](http://en.wikipedia.org/wiki/Data_access_object)
+(DAOs) and other objects specific to handling persistence.
+
+## `models/`
+contains data objects passed throughout the system.
+
+Notes
+-----
+
+The breakdown given here is relatively procedural, and appropriate for simple
+CRUD operations, RPC endpoints, and high-volume aggregators; it's less
+appropriate for highly object-oriented systems such as very complex relational
+data models. We think it's a good starting point, but feel free to ignore it
+when it doesn't work well.
