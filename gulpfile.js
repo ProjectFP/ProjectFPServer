@@ -1,6 +1,8 @@
 var gulp = require('gulp');
 var nodemon = require('gulp-nodemon');
 var jshint = require('gulp-jshint');
+var istanbul = require('gulp-istanbul');
+var mocha = require('gulp-mocha');
 
 gulp.task('lint', function () {
   gulp.src('./**/*.js')
